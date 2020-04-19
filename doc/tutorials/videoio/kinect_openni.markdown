@@ -43,7 +43,7 @@ VideoCapture can retrieve the following data:
     -   CAP_OPENNI_POINT_CLOUD_MAP - XYZ in meters (CV_32FC3)
     -   CAP_OPENNI_DISPARITY_MAP - disparity in pixels (CV_8UC1)
     -   CAP_OPENNI_DISPARITY_MAP_32F - disparity in pixels (CV_32FC1)
-    -   CAP_OPENNI_VALID_DEPTH_MASK - mask of valid pixels (not ocluded, not shaded etc.)
+    -   CAP_OPENNI_VALID_DEPTH_MASK - mask of valid pixels (not occluded, not shaded etc.)
         (CV_8UC1)
 
 -#  data given from BGR image generator:
@@ -134,5 +134,5 @@ property. The following properties of cameras available through OpenNI interface
     -   CAP_OPENNI_DEPTH_GENERATOR_REGISTRATION = CAP_OPENNI_DEPTH_GENERATOR + CAP_PROP_OPENNI_REGISTRATION
 
 For more information please refer to the example of usage
-[openni_capture.cpp](https://github.com/opencv/opencv/tree/master/samples/cpp/openni_capture.cpp) in
+[videocapture_openni.cpp](https://github.com/opencv/opencv/tree/master/samples/cpp/videocapture_openni.cpp) in
 opencv/samples/cpp folder.
