@@ -29,7 +29,7 @@ if(WITH_IPP)
     if(OPENCV_FORCE_IPP_EXCLUDE_LIBS
         OR (HAVE_IPP_ICV
             AND UNIX AND NOT ANDROID AND NOT APPLE
-            AND (CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+            AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang|Intel"
         )
         AND NOT OPENCV_SKIP_IPP_EXCLUDE_LIBS
     )
@@ -40,7 +40,11 @@ endif()
 
 # --- CUDA ---
 if(WITH_CUDA)
-  include("${OpenCV_SOURCE_DIR}/cmake/OpenCVDetectCUDA.cmake")
+  if(ENABLE_CUDA_FIRST_CLASS_LANGUAGE)
+    include("${OpenCV_SOURCE_DIR}/cmake/OpenCVDetectCUDALanguage.cmake")
+  else()
+    include("${OpenCV_SOURCE_DIR}/cmake/OpenCVDetectCUDA.cmake")
+  endif()
   if(NOT HAVE_CUDA)
     message(WARNING "OpenCV is not able to find/configure CUDA SDK (required by WITH_CUDA).
 CUDA support will be disabled in OpenCV build.
@@ -51,7 +55,15 @@ endif(WITH_CUDA)
 
 # --- Eigen ---
 if(WITH_EIGEN AND NOT HAVE_EIGEN)
-  find_package(Eigen3 QUIET)
+  if((OPENCV_FORCE_EIGEN_FIND_PACKAGE_CONFIG
+      OR NOT (CMAKE_VERSION VERSION_LESS "3.0.0")  # Eigen3Targets.cmake required CMake 3.0.0+
+      ) AND NOT OPENCV_SKIP_EIGEN_FIND_PACKAGE_CONFIG
+  )
+    find_package(Eigen3 CONFIG QUIET)  # Ceres 2.0.0 CMake scripts doesn't work with CMake's FindEigen3.cmake module (due to missing EIGEN3_VERSION_STRING)
+  endif()
+  if(NOT Eigen3_FOUND)
+    find_package(Eigen3 QUIET)
+  endif()
 
   if(Eigen3_FOUND)
     if(TARGET Eigen3::Eigen)
@@ -149,3 +161,42 @@ if(WITH_CLP)
     endif()
   endif()
 endif(WITH_CLP)
+
+# --- ARM KleidiCV
+if(WITH_KLEIDICV)
+  if(KLEIDICV_SOURCE_PATH AND EXISTS "${KLEIDICV_SOURCE_PATH}/adapters/opencv/CMakeLists.txt")
+    message(STATUS "Use external KleidiCV ${KLEIDICV_SOURCE_PATH}")
+    set(HAVE_KLEIDICV ON)
+  endif()
+  if(NOT HAVE_KLEIDICV)
+    include("${OpenCV_SOURCE_DIR}/3rdparty/kleidicv/kleidicv.cmake")
+    download_kleidicv(KLEIDICV_SOURCE_PATH)
+    if(KLEIDICV_SOURCE_PATH)
+      set(HAVE_KLEIDICV ON)
+    endif()
+  endif()
+endif(WITH_KLEIDICV)
+
+# --- FastCV ---
+if(WITH_FASTCV)
+  if((EXISTS ${FastCV_INCLUDE_PATH}) AND (EXISTS ${FastCV_LIB_PATH}))
+    message(STATUS "Use external FastCV ${FastCV_INCLUDE_PATH}, ${FastCV_LIB_PATH}")
+    set(HAVE_FASTCV TRUE CACHE BOOL "FastCV status")
+  else()
+    include("${OpenCV_SOURCE_DIR}/3rdparty/fastcv/fastcv.cmake")
+    set(FCV_ROOT_DIR "${OpenCV_BINARY_DIR}/3rdparty/fastcv")
+    download_fastcv(${FCV_ROOT_DIR})
+    if(HAVE_FASTCV)
+      set(FastCV_INCLUDE_PATH "${FCV_ROOT_DIR}/inc" CACHE PATH "FastCV includes directory")
+      set(FastCV_LIB_PATH "${FCV_ROOT_DIR}/libs" CACHE PATH "FastCV library directory")
+      ocv_install_3rdparty_licenses(FastCV "${OpenCV_BINARY_DIR}/3rdparty/fastcv/LICENSE")
+      install(FILES "${FastCV_LIB_PATH}/libfastcvopt.so"
+              DESTINATION "${OPENCV_LIB_INSTALL_PATH}" COMPONENT "bin")
+    else()
+      set(HAVE_FASTCV FALSE CACHE BOOL "FastCV status")
+    endif()
+  endif()
+  if(HAVE_FASTCV)
+    set(FASTCV_LIBRARY "${FastCV_LIB_PATH}/libfastcvopt.so" CACHE PATH "FastCV library")
+  endif()
+endif(WITH_FASTCV)

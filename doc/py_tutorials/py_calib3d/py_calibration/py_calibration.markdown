@@ -24,6 +24,8 @@ red line. All the expected straight lines are bulged out. Visit [Distortion
 
 ![image](images/calib_radial.jpg)
 
+In the following sections several new parameters are introduced. Visit [Camera Calibration and 3D Reconstruction](#tutorial_table_of_content_calib3d) for more details.
+
 Radial distortion can be represented as follows:
 
 \f[x_{distorted} = x( 1 + k_1 r^2 + k_2 r^4 + k_3 r^6) \\
@@ -127,7 +129,7 @@ for fname in images:
         objpoints.append(objp)
 
         corners2 = cv.cornerSubPix(gray,corners, (11,11), (-1,-1), criteria)
-        imgpoints.append(corners)
+        imgpoints.append(corners2)
 
         # Draw and display the corners
         cv.drawChessboardCorners(img, (7,6), corners2, ret)
@@ -209,15 +211,13 @@ find the average error, we calculate the arithmetical mean of the errors calcula
 calibration images.
 @code{.py}
 mean_error = 0
-for i in xrange(len(objpoints)):
+for i in range(len(objpoints)):
     imgpoints2, _ = cv.projectPoints(objpoints[i], rvecs[i], tvecs[i], mtx, dist)
     error = cv.norm(imgpoints[i], imgpoints2, cv.NORM_L2)/len(imgpoints2)
     mean_error += error
 
 print( "total error: {}".format(mean_error/len(objpoints)) )
 @endcode
-Additional Resources
---------------------
 
 Exercises
 ---------

@@ -286,11 +286,12 @@ bool  Jpeg2KDecoder::readData( Mat& img )
         {
             int ncmpts;
             int cmptlut[3];
+            int swap_rb = m_use_rgb ? 0 : 2;
             if( color )
             {
-                cmptlut[0] = jas_image_getcmptbytype( image, JAS_IMAGE_CT_RGB_B );
-                cmptlut[1] = jas_image_getcmptbytype( image, JAS_IMAGE_CT_RGB_G );
-                cmptlut[2] = jas_image_getcmptbytype( image, JAS_IMAGE_CT_RGB_R );
+                cmptlut[0] = jas_image_getcmptbytype( image, swap_rb );
+                cmptlut[1] = jas_image_getcmptbytype( image, 1 );
+                cmptlut[2] = jas_image_getcmptbytype( image, swap_rb^2 );
                 if( cmptlut[0] < 0 || cmptlut[1] < 0 || cmptlut[2] < 0 )
                     result = false;
                 ncmpts = 3;
@@ -378,7 +379,7 @@ bool  Jpeg2KDecoder::readComponent8u( uchar *data, void *_buffer,
 
     for( y = 0; y < yend - ystart; )
     {
-        jas_seqent_t* pix_row = &jas_matrix_get( buffer, y / ystep, 0 );
+        jas_seqent_t* pix_row = jas_matrix_getref( buffer, y / ystep, 0 );
         uchar* dst = data + (y - yoffset) * step - xoffset;
 
         if( xstep == 1 )
@@ -444,7 +445,7 @@ bool  Jpeg2KDecoder::readComponent16u( unsigned short *data, void *_buffer,
 
     for( y = 0; y < yend - ystart; )
     {
-        jas_seqent_t* pix_row = &jas_matrix_get( buffer, y / ystep, 0 );
+        jas_seqent_t* pix_row = jas_matrix_getref( buffer, y / ystep, 0 );
         ushort* dst = data + (y - yoffset) * step - xoffset;
 
         if( xstep == 1 )
